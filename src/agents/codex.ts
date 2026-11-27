@@ -118,7 +118,7 @@ async function username(ctx: AgentContext, holder: number): Promise<string | nul
 export const codex: Provider = {
   kind: "codex",
   // Each start is a run on the user's machine and their ChatGPT plan's limits.
-  limits: { startsPerHour: 20 },
+  limits: { startsPerHour: 100 },
 
   async status(ctx, holder) {
     const config = await loadCodex(ctx.store, ctx.config.secretKey, holder);
