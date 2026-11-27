@@ -64,10 +64,10 @@ export function isAllowed(config: Pick<Config, "allowed">, userId: number): bool
   return config.allowed === null || config.allowed.has(userId);
 }
 
-/** One config per token per isolate: key derivation is async and needs doing only once. */
-const cache = new Map<string, Promise<Config>>();
+/** Cache only completed values, never a promise owned by another request. */
+const cache = new Map<string, Config>();
 
-export function loadConfig(env: Env): Promise<Config> {
+export async function loadConfig(env: Env): Promise<Config> {
   const cacheKey = [
     env.BOT_TOKEN,
     env.ALLOWED_USER_IDS,
@@ -77,12 +77,10 @@ export function loadConfig(env: Env): Promise<Config> {
   ]
     .map(String)
     .join("\n");
-  let config = cache.get(cacheKey);
-  if (!config) {
-    config = buildConfig(env);
-    cache.set(cacheKey, config);
-    config.catch(() => cache.delete(cacheKey));
-  }
+  const cached = cache.get(cacheKey);
+  if (cached) return cached;
+  const config = await buildConfig(env);
+  cache.set(cacheKey, config);
   return config;
 }
 
