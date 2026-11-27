@@ -181,15 +181,14 @@ export class TelegramApi {
   }
 }
 
-/** Bot identity, fetched once per isolate. */
-let me: Promise<User> | undefined;
+/** Cache only completed values; pending I/O belongs to the current Worker request. */
+let me: User | undefined;
 
-export function botIdentity(api: TelegramApi): Promise<User> {
-  if (!me) {
-    me = api.getMe();
-    me.catch(() => (me = undefined));
-  }
-  return me;
+export async function botIdentity(api: TelegramApi): Promise<User> {
+  if (me) return me;
+  const identity = await api.getMe();
+  me = identity;
+  return identity;
 }
 
 /** For tests. */
