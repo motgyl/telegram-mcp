@@ -610,16 +610,12 @@ const UPGRADES: { target: number; alter?: string[]; rebuild?: string[] }[] = [
   },
 ];
 
-const ready = new WeakMap<D1Database, Promise<void>>();
+const ready = new WeakSet<D1Database>();
 
-export function ensureSchema(db: D1Database): Promise<void> {
-  let promise = ready.get(db);
-  if (!promise) {
-    promise = migrate(db);
-    ready.set(db, promise);
-    promise.catch(() => ready.delete(db));
-  }
-  return promise;
+export async function ensureSchema(db: D1Database): Promise<void> {
+  if (ready.has(db)) return;
+  await migrate(db);
+  ready.add(db);
 }
 
 async function migrate(db: D1Database): Promise<void> {
